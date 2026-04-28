@@ -1,8 +1,8 @@
-# Documentation
+# 文档
 
-This folder provides a guided tour and high-level explanations of the core components.
+本目录提供项目导览与核心组件的高层说明。
 
-## Contents
-- Getting Started: setup notes and basic usage
-- Training Pipeline: pretrain, SFT, DPO, PPO, GRPO overview
-- Model Architecture: GQA, RoPE/YaRN, MoE, and LoRA
+## 目录
+- 入门指南：环境配置与基础用法
+- 训练流程：Pretrain、SFT、DPO、PPO、GRPO 概览
+- 模型结构：GQA、RoPE/YaRN、MoE、LoRA

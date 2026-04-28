@@ -1,45 +1,45 @@
-## AquilaLM: Open LLM Training Stack
+## AquilaLM: 开源 LLM 训练栈
 
 ![AquilaLM logo](docs/logo.svg)
 
-A compact, readable LLM training stack that covers pretraining, supervised fine-tuning, and preference optimization. It focuses on clear implementations of core techniques and stable training workflows.
+一个紧凑、可读的 LLM 训练栈，覆盖预训练、监督微调与偏好优化流程，强调核心技术的清晰实现与稳定训练策略。
 
-### Highlights
-- End-to-end pipeline: Pretrain, SFT, DPO, PPO, GRPO
-- Model building blocks: RoPE (with YaRN scaling), GQA, optional MoE
-- Training stability: AMP, gradient accumulation, clipping, resume, DDP
-- Data tooling: SFT/DPO datasets with loss-mask design
-- Parameter-efficient tuning: LoRA adapters
+### 亮点
+- 端到端流程：Pretrain、SFT、DPO、PPO、GRPO
+- 模型组件：RoPE (含 YaRN 缩放)、GQA、可选 MoE
+- 训练稳定性：AMP、梯度累积、裁剪、断点续训、DDP
+- 数据工具：SFT/DPO 数据集与 loss mask 设计
+- 参数高效微调：LoRA 适配器
 
-### Architecture Diagram
+### 架构示意
 ```mermaid
 flowchart LR
-	A[Text / Conversations] --> B[Tokenizer]
-	B --> C[Decoder-Only Model]
-	C --> D[Pretrain]
-	C --> E[SFT]
-	E --> F[DPO / PPO / GRPO]
-	C --> G[LoRA / MoE Options]
+  A[文本 / 对话] --> B[Tokenizer]
+  B --> C[Decoder-Only 模型]
+  C --> D[Pretrain]
+  C --> E[SFT]
+  E --> F[DPO / PPO / GRPO]
+  C --> G[LoRA / MoE 选项]
 ```
 
-### Repository Layout
-- [main.py](main.py): entry point (stub)
+### 目录结构
+- [main.py](main.py): 入口 (占位)
 - model/
-	- [model.py](model/model.py): core model, RoPE, GQA, MoE
-	- [model_lora.py](model/model_lora.py): LoRA adapters
+	- [model.py](model/model.py): 模型主体、RoPE、GQA、MoE
+	- [model_lora.py](model/model_lora.py): LoRA 适配器
 - dataset/
-	- [lm_dataset.py](dataset/lm_dataset.py): Pretrain/SFT/DPO datasets
+	- [lm_dataset.py](dataset/lm_dataset.py): Pretrain/SFT/DPO 数据集
 - trainer/
-	- [train_pretrain.py](trainer/train_pretrain.py): pretraining
-	- [train_full_sft.py](trainer/train_full_sft.py): full SFT
+	- [train_pretrain.py](trainer/train_pretrain.py): 预训练
+	- [train_full_sft.py](trainer/train_full_sft.py): 全量 SFT
 	- [train_dpo.py](trainer/train_dpo.py): DPO
 	- [train_ppo.py](trainer/train_ppo.py): PPO
 	- [train_grpo.py](trainer/train_grpo.py): GRPO
-	- [trainer_utils.py](trainer/trainer_utils.py): training utilities
+	- [trainer_utils.py](trainer/trainer_utils.py): 训练工具函数
 
-### Quickstart
+### 快速开始
 ```bash
-# Pretrain
+# 预训练
 python trainer/train_pretrain.py --data_path ../dataset/pretrain_hq.jsonl
 
 # SFT
@@ -53,9 +53,9 @@ python trainer/train_ppo.py --data_path ../dataset/rl.jsonl
 python trainer/train_grpo.py --data_path ../dataset/rl.jsonl
 ```
 
-### Docs
-- See [docs/README.md](docs/README.md) for a guided tour.
-- See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for setup notes.
+### 文档
+- 参见 [docs/README.md](docs/README.md) 获取导览
+- 参见 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) 获取环境配置说明
 
-### Notes
-This repository contains only code and public-facing documentation. Internal notes and drafts should be kept outside the repo before publishing.
+### 说明
+本仓库仅包含代码与对外文档。内部笔记或草稿请勿提交到仓库。
