@@ -48,9 +48,9 @@ AquilaLM/
 ## 4. 模型与算法实现亮点
 
 ### 4.1 主体模型（`model/model.py`）
-- `Self_Minimindconfig`：统一管理模型超参数
-- `Self_MinimindModel`：Decoder-Only 主体，支持 KV Cache
-- `Self_MinimindForCausalLM`：封装 Causal LM 输出与训练损失
+- 配置层：统一管理模型超参数与推理/训练开关
+- Backbone 层：Decoder-Only 主体结构，支持 KV Cache
+- CausalLM 层：封装 logits 计算、训练损失与生成接口
 
 ### 4.2 注意力与位置编码
 - **GQA（Grouped-Query Attention）**：Query 头与 KV 头解耦，提高效率
