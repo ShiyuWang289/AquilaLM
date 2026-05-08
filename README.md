@@ -56,6 +56,7 @@ python trainer/train_grpo.py --data_path ../dataset/rl.jsonl
 ### 文档
 - 参见 [docs/README.md](docs/README.md) 获取导览
 - 参见 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) 获取环境配置说明
+- 参见 [README_PORTFOLIO.md](README_PORTFOLIO.md) 获取简历投递版项目附件
 
 ### 说明
 本仓库仅包含代码与对外文档。内部笔记或草稿请勿提交到仓库。
