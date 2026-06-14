@@ -1,0 +1,26 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-stage1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run stage1 on sample data
+        run: |
+          cp data/samples/c4_zh_sample_100.jsonl data/c4_zh_5k.jsonl
+          python stages/stage1_clean_pipeline.py
+      - name: Verify output
+        run: |
+          wc -l data/cleaned.jsonl
+          python -c "assert open('data/cleaned.jsonl').read().count('\n') > 50, 'Too few results'"

@@ -1,0 +1,22 @@
+# AquilaLM 依赖
+# 安装：pip install -r requirements.txt
+
+# 核心
+torch>=2.0
+transformers>=4.40
+datasets>=3.0
+
+# 数据清洗流水线
+jieba>=0.42
+datasketch>=1.6
+scipy>=1.10
+PyYAML>=6.0
+tqdm>=4.65
+
+# 质量评估（阶段3）
+sentence-transformers>=2.3
+
+# 训练（阶段6 规模化验证）
+accelerate>=1.0
+peft>=0.7
+trl>=0.13

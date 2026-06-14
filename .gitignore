@@ -1,0 +1,24 @@
+# 数据文件（本地测试用，不提交大文件）
+data/*.jsonl
+!data/samples/*.jsonl
+
+# 日志
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OMC
+.omc/
+
+# OS
+.DS_Store
+Thumbs.db
