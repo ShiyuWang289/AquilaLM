@@ -45,6 +45,43 @@ dedup:
   output: "data/cleaned.jsonl"           # 最终产出（去重后）
 
 # ============================================================
+# 4. 指令合成（阶段2）
+# ============================================================
+instruction_synth:
+  enabled: true
+  api_base: "https://api.deepseek.com"       # DeepSeek API 地址
+  flash_model: "deepseek-chat"               # v4flash 模型名（批量生成）
+  pro_model: "deepseek-reasoner"             # v4pro 模型名（复杂进化）
+  max_retries: 3                              # API 调用失败重试次数
+  temperature_creative: 0.8                   # 生成温度（高=多样）
+  temperature_precise: 0.3                    # 进化/偏好构造温度（低=稳定）
+  # 种子筛选
+  seed_min_length: 100
+  seed_max_length: 500
+  seed_max_ppl: 15.0
+  seed_min_cn_ratio: 0.5
+  max_seeds: 80                               # 最多选取种子数
+  # Self-Instruct
+  si_generations_per_seed: 5                  # 每条种子生成的指令数
+  si_task_types: ["推理分析", "知识问答", "文本生成", "代码编写", "多轮对话"]
+  # Evol-Instruct
+  ei_max_evolve: 150                          # 最多进化多少条
+  ei_evolution_types: ["增加约束", "深化推理", "拆解子任务", "多轮对话", "代码加解释"]
+  # DPO 偏好构造
+  dpo_code_pairs: 20                          # 代码执行正确性构造的偏好对数
+  dpo_math_pairs: 20                          # 数学答案验证构造的偏好对数
+  dpo_exec_timeout: 5                         # 代码执行超时（秒）
+  # 后过滤
+  postfilter_min_instruction_len: 10
+  postfilter_min_output_len: 30
+  postfilter_jaccard_threshold: 0.7           # 指令间去重阈值
+  postfilter_consistency_threshold: 0.7       # 一致性最低分数
+  # 输出
+  output: "data/synthesized.jsonl"            # 合成指令数据
+  dpo_output: "data/dpo_pairs.jsonl"          # DPO 偏好对
+  consistency_sample: 30                      # 一致性抽检数量
+
+# ============================================================
 # 全局
 # ============================================================
 global:
