@@ -46,7 +46,7 @@ AquilaLM/
 ├── .gitignore
 ├── stages/                     # 各阶段独立脚本
 │   ├── stage1_clean_pipeline.py    # ✅ 数据清洗
-│   ├── stage2_instruction_synth.py # ⬜ 指令合成
+│   ├── stage2_instruction_synth.py # ✅ 指令合成
 │   ├── stage3_quality_eval.py      # ⬜ 质量评估
 │   ├── stage4_curriculum.py        # ⬜ 课程学习
 │   └── stage5_flywheel.py          # ⬜ 反馈闭环
@@ -57,9 +57,11 @@ AquilaLM/
 ├── docs/                       # 知识文档
 │   ├── roadmap.md                  # 项目仪表盘（进度/边界/改进计划）
 │   ├── architecture.md             # 架构全景
-│   └── stage1_cleaning.md          # 阶段1原理+实验报告
+│   ├── stage1_cleaning.md          # 阶段1原理+实验报告
+│   └── stage2_instruction_synth.md # 阶段2原理+面试速记卡
 ├── experiments/                # 实验记录
-│   └── stage1_grid_search.md       # 2×2网格搜索
+│   ├── stage1_grid_search.md       # 2×2网格搜索
+│   └── stage2_synth_report.md      # 指令合成POC报告
 └── data/samples/               # 小样本数据（演示用）
 ```
 
@@ -75,11 +77,12 @@ pip install -r requirements.txt
 # 3. 数据探查（先看分布再定阈值）
 python stages/stage1_clean_pipeline.py --profile-only
 
-# 4. 运行全流程
+# 4. 运行阶段1：数据清洗
 python stages/stage1_clean_pipeline.py
 
-# 5. 查看实验日志
-cat logs/clean_pipeline.log
+# 5. 运行阶段2：指令合成（需设置 API Key）
+export DEEPSEEK_API_KEY=sk-your-key-here
+python stages/stage2_instruction_synth.py
 ```
 
 ## 实验证据
@@ -94,6 +97,19 @@ cat logs/clean_pipeline.log
 | 长度标准差 | 3425 | 1039 | **-70%** |
 | 长度变异系数 | 2.86 | 1.14 | **-60%** |
 | Bigram 多样性 | 0.193 | 0.263 | **+36%** |
+
+### 阶段2：指令合成
+
+基于 DeepSeek API 的 Self-Instruct + Evol-Instruct 两级合成，从 80 条种子生成了 505 条指令 + 40 对 DPO 偏好数据：
+
+| 模块 | 输入 | 产出 | API 调用 | 费用 |
+|------|------|------|----------|------|
+| Self-Instruct | 80 种子 | 375 条指令 | 387 次 | ¥0.50 |
+| Evol-Instruct | 150 候选 | 130 条进化指令 | ~150 次 | ~¥1.50 |
+| DPO 偏好构造 | 40 对目标 | 40 对 | 63 次 | ~¥0.20 |
+| **合计** | | **505 条 + 40 对** | | **¥2.20** |
+
+类型覆盖：代码(83) / 推理(80) / 文本生成(73) / 对话(72) / 知识问答(63)。DPO 采用双策略——数学答案验证（正则提取，成功率 95%）+ LLM-as-Judge 兜底（解决代码执行判定成功率 5% 问题）。
 
 ## 技术栈
 
