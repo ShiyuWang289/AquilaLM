@@ -47,7 +47,7 @@ AquilaLM/
 ├── stages/                     # 各阶段独立脚本
 │   ├── stage1_clean_pipeline.py    # ✅ 数据清洗
 │   ├── stage2_instruction_synth.py # ✅ 指令合成
-│   ├── stage3_quality_eval.py      # ⬜ 质量评估
+│   ├── stage3_quality_eval.py      # ✅ 质量评估
 │   ├── stage4_curriculum.py        # ⬜ 课程学习
 │   └── stage5_flywheel.py          # ⬜ 反馈闭环
 ├── utils/                      # 共享工具库
@@ -110,6 +110,18 @@ python stages/stage2_instruction_synth.py
 | **合计** | | **505 条 + 40 对** | | **¥2.20** |
 
 类型覆盖：代码(83) / 推理(80) / 文本生成(73) / 对话(72) / 知识问答(63)。DPO 采用双策略——数学答案验证（正则提取，成功率 95%）+ LLM-as-Judge 兜底（解决代码执行判定成功率 5% 问题）。
+
+### 阶段3：三维质量评估
+
+基于 GPT-2 124M + sentence-transformers 的 CPU/GPU 混合评估管线，对 505 条指令进行三维打分：
+
+| 维度 | 指标 | 方法 | 结果 |
+|------|------|------|------|
+| PPL 流畅度 | N-gram trigram 困惑度 | 复用阶段1手写模型 | mean=3.9, 全在 2.2-6.0 |
+| IFD 指令难度 | loss(answer\|instr)/loss(answer) | GPT-2 102M GPU推理 | mean=0.639, SI 0.588 vs EI 0.773 |
+| Embedding 多样性 | 句子向量余弦相似度 | MiniLM-L12-v2 | 0.729 (1-mean_sim) |
+
+**核心发现**：Evol-Instruct 产出的指令 IFD 均值比 Self-Instruct 高 31.3%（0.773 vs 0.588），用客观指标量化验证了进化算子确实提升了指令复杂度。
 
 ## 技术栈
 

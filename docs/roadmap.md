@@ -1,7 +1,7 @@
 # AquilaLM 项目路线图
 
 > 项目仪表盘：当前进度、已知边界、待改进项、下一步计划。
-> 每完成一个阶段同步更新。最后更新：2026-06-15。
+> 每完成一个阶段同步更新。最后更新：2026-06-16。
 
 ## 一、进度总览
 
@@ -9,7 +9,7 @@
 |------|------|------|------|----------|
 | 1 | 数据清洗流水线 | ✅ 完成 | `stages/stage1_clean_pipeline.py` | PPL=30, Jaccard=0.60 |
 | 2 | 指令合成引擎 | ✅ 完成 | `stages/stage2_instruction_synth.py` | 505条指令+40对DPO, ¥2.20 |
-| 3 | 三维质量评估 | ⬜ 待开始 | `stages/stage3_quality_eval.py` | — |
+| 3 | 三维质量评估 | ✅ 完成 | `stages/stage3_quality_eval.py` | PPL=3.9, IFD=0.639, Diversity=0.73, SI/EI差距+31% |
 | 4 | 课程学习排序器 | ⬜ 待开始 | `stages/stage4_curriculum.py` | — |
 | 5 | 反馈闭环调度器 | ⬜ 待开始 | `stages/stage5_flywheel.py` | — |
 | 6 | 端到端集成验证 | ⬜ 待开始 | 全流程测试 + 下游训练对比 | — |
@@ -28,8 +28,10 @@
 | `docs/architecture.md` | 数据飞轮全景架构 + 面试话术 | 面试前复习总架构 |
 | `docs/stage1_cleaning.md` | 阶段1原理 + POC实验报告 + 面试速记卡 | 被问"数据清洗怎么做"时回顾 |
 | `docs/stage2_instruction_synth.md` | 阶段2原理 + POC实验报告 + 面试速记卡 | 被问"指令合成怎么做"时回顾 |
+| `docs/stage3_quality_eval.md` | 阶段3原理 + 三维指标详解 + 面试速记卡 | 被问"数据质量评估怎么做"时回顾 |
 | `experiments/stage1_grid_search.md` | 阶段1网格搜索原始数据 | 面试追问实验细节时回顾 |
 | `experiments/stage2_synth_report.md` | 阶段2合成实验原始数据 | 面试追问实验细节时回顾 |
+| `experiments/stage3_quality_eval_report.md` | 阶段3质量评估实验记录 | 面试追问IFD/多样性数据时回顾 |
 
 ### 代码
 | 文件 | 内容 | 什么时候看 |
@@ -37,6 +39,7 @@
 | `config.yaml` | 所有参数集中管理 | 调参/换数据集时 |
 | `stages/stage1_clean_pipeline.py` | 三阶段清洗管线主程序 | 复习实现细节 |
 | `stages/stage2_instruction_synth.py` | 指令合成引擎主程序 | 复习实现细节 |
+| `stages/stage3_quality_eval.py` | 三维质量评估主程序 | 复习实现细节 |
 | `utils/io.py` | JSONL读写 | 写新阶段时复用 |
 | `utils/profile.py` | 数据探查 | 换数据集时 |
 | `utils/health.py` | 健康度对比 | 写新阶段时复用 |

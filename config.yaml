@@ -82,6 +82,26 @@ instruction_synth:
   consistency_sample: 30                      # 一致性抽检数量
 
 # ============================================================
+# 3. 三维质量评估（阶段3）
+# ============================================================
+quality_eval:
+  enabled: true
+  input: "data/synthesized.jsonl"            # 输入：阶段2合成指令
+  output: "data/scored.jsonl"                # 输出：含三维评分的指令数据
+  # PPL 流畅度
+  ppl_n: 3                                    # N-gram 阶数
+  ppl_tokenizer: "jieba"                      # 分词方式
+  # IFD 指令难度
+  ifd_model_name: "uer/gpt2-chinese-cluecorpussmall"  # 中文 GPT-2（CPU可跑）
+  ifd_batch_size: 4                           # 推理 batch size
+  ifd_max_length: 512                          # 最大 token 长度
+  # Embedding 多样性
+  embed_model_name: "paraphrase-multilingual-MiniLM-L12-v2"  # 多语言 sentence encoder
+  embed_batch_size: 32                        # 编码 batch size
+  # 设备
+  device: "auto"                               # auto | cuda | cpu
+
+# ============================================================
 # 全局
 # ============================================================
 global:
