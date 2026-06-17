@@ -49,7 +49,7 @@ AquilaLM/
 │   ├── stage2_instruction_synth.py # ✅ 指令合成
 │   ├── stage3_quality_eval.py      # ✅ 质量评估
 │   ├── stage4_curriculum.py        # ✅ 课程学习
-│   └── stage5_flywheel.py          # ⬜ 反馈闭环
+│   ├── stage5_flywheel.py          # ✅ 反馈闭环
 ├── utils/                      # 共享工具库
 │   ├── io.py                       # JSONL 读写
 │   ├── profile.py                  # 数据探查
@@ -132,7 +132,19 @@ python stages/stage2_instruction_synth.py
 | 分带混洗 (Band-Shuffle) | IFD 等分3带，带内混洗 | 163/163/163 条，类型混合 |
 | β退火加权采样 (Beta-Annealing) | β: 1.0→0.1, 权重比 39x→1.4x | 熵: 5.88→6.19，平滑过渡 |
 
-489 条（PPL 过滤 16 条）进入课程学习序列，供后续 SFT 训练使用。
+489 条（PPL 过滤 16 条）进入课程学习序列。
+
+### 阶段5：反馈闭环调度器
+
+8维信号归一化 + 13参数权重矩阵，让下游训练评估结果反向驱动数据策略：
+
+| 组件 | 功能 | 方法 |
+|------|------|------|
+| SignalNormalizer | 评估指标 → 0~1 偏差分数 | 4种 mock 场景 + 真实信号注入 |
+| DecisionEngine | 信号 ⊗ 权重矩阵 → 调整量 | 13 参数 × 8 信号因果关系矩阵 |
+| ParameterAdjuster | 调整量 → 新参数值 | 防过调 clamp ±30% + 自动备份 |
+
+4种模拟场景（drift/hard/noise/baseline）覆盖了数据飞轮最常见的失效模式。
 
 ## 技术栈
 

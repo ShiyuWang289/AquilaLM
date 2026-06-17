@@ -11,7 +11,7 @@
 | 2 | 指令合成引擎 | ✅ 完成 | `stages/stage2_instruction_synth.py` | 505条指令+40对DPO, ¥2.20 |
 | 3 | 三维质量评估 | ✅ 完成 | `stages/stage3_quality_eval.py` | PPL=3.9, IFD=0.639, Diversity=0.73, SI/EI差距+31% |
 | 4 | 课程学习排序器 | ✅ 完成 | `stages/stage4_curriculum.py` | 489条, 两套策略(分带+β退火) |
-| 5 | 反馈闭环调度器 | ⬜ 待开始 | `stages/stage5_flywheel.py` | — |
+| 5 | 反馈闭环调度器 | ✅ 完成 | `stages/stage5_flywheel.py` | 8信号×13参数权重矩阵, 4种mock场景 |
 | 6 | 端到端集成验证 | ⬜ 待开始 | 全流程测试 + 下游训练对比 | — |
 
 ## 二、项目文件地图
@@ -43,6 +43,7 @@
 | `stages/stage2_instruction_synth.py` | 指令合成引擎主程序 | 复习实现细节 |
 | `stages/stage3_quality_eval.py` | 三维质量评估主程序 | 复习实现细节 |
 | `stages/stage4_curriculum.py` | 课程学习排序器主程序 | 复习实现细节 |
+| `stages/stage5_flywheel.py` | 反馈闭环调度器主程序 | 复习实现细节 |
 | `utils/io.py` | JSONL读写 | 写新阶段时复用 |
 | `utils/profile.py` | 数据探查 | 换数据集时 |
 | `utils/health.py` | 健康度对比 | 写新阶段时复用 |
