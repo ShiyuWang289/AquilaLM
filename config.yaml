@@ -102,6 +102,28 @@ quality_eval:
   device: "auto"                               # auto | cuda | cpu
 
 # ============================================================
+# 4. 课程学习排序器（阶段4）
+# ============================================================
+curriculum:
+  enabled: true
+  input: "data/scored.jsonl"                 # 输入：阶段3含IFD评分的数据
+  output_band: "data/curriculum_band.jsonl"  # 策略A输出：分带混洗
+  output_beta: "data/curriculum_beta.jsonl"  # 策略B输出：β退火加权
+  # 质量过滤
+  ppl_max: 5.0                               # PPL 超过此值不进课程学习
+  ifd_missing_strategy: "median"             # IFD缺失处理: drop | mean | median
+  # 策略A: 分带混洗
+  band_count: 3                              # 难度带数
+  band_boundaries: null                       # null = 自动等分位数切割
+  band_shuffle: true
+  # 策略B: β退火
+  beta_start: 1.0                            # 初始 β（倾向简单样本）
+  beta_end: 0.1                              # 终止 β（接近均匀采样）
+  beta_steps: 5                              # 退火步数
+  sampling_epochs: 3                         # 完整遍历次数
+  temperature: 0.5                           # 采样温度
+
+# ============================================================
 # 全局
 # ============================================================
 global:

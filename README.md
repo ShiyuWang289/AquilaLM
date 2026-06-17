@@ -48,7 +48,7 @@ AquilaLM/
 │   ├── stage1_clean_pipeline.py    # ✅ 数据清洗
 │   ├── stage2_instruction_synth.py # ✅ 指令合成
 │   ├── stage3_quality_eval.py      # ✅ 质量评估
-│   ├── stage4_curriculum.py        # ⬜ 课程学习
+│   ├── stage4_curriculum.py        # ✅ 课程学习
 │   └── stage5_flywheel.py          # ⬜ 反馈闭环
 ├── utils/                      # 共享工具库
 │   ├── io.py                       # JSONL 读写
@@ -122,6 +122,17 @@ python stages/stage2_instruction_synth.py
 | Embedding 多样性 | 句子向量余弦相似度 | MiniLM-L12-v2 | 0.729 (1-mean_sim) |
 
 **核心发现**：Evol-Instruct 产出的指令 IFD 均值比 Self-Instruct 高 31.3%（0.773 vs 0.588），用客观指标量化验证了进化算子确实提升了指令复杂度。
+
+### 阶段4：课程学习排序
+
+两套策略将 IFD 分数转化为可训练的难度序列：
+
+| 策略 | 方法 | 结果 |
+|------|------|------|
+| 分带混洗 (Band-Shuffle) | IFD 等分3带，带内混洗 | 163/163/163 条，类型混合 |
+| β退火加权采样 (Beta-Annealing) | β: 1.0→0.1, 权重比 39x→1.4x | 熵: 5.88→6.19，平滑过渡 |
+
+489 条（PPL 过滤 16 条）进入课程学习序列，供后续 SFT 训练使用。
 
 ## 技术栈
 
