@@ -50,6 +50,7 @@ AquilaLM/
 │   ├── stage3_quality_eval.py      # ✅ 质量评估
 │   ├── stage4_curriculum.py        # ✅ 课程学习
 │   ├── stage5_flywheel.py          # ✅ 反馈闭环
+│   ├── stage6_e2e.py               # ✅ 端到端验证
 ├── utils/                      # 共享工具库
 │   ├── io.py                       # JSONL 读写
 │   ├── profile.py                  # 数据探查
@@ -145,6 +146,18 @@ python stages/stage2_instruction_synth.py
 | ParameterAdjuster | 调整量 → 新参数值 | 防过调 clamp ±30% + 自动备份 |
 
 4种模拟场景（drift/hard/noise/baseline）覆盖了数据飞轮最常见的失效模式。
+
+### 阶段6：端到端验证
+
+三组对照 SFT 实验，104M 模型 + RTX 4060，验证数据飞轮全链路增益：
+
+| 实验组 | 最终 Loss | 排名 |
+|--------|-----------|:--:|
+| β退火加权采样 (Beta) | **8.99** | 🥇 |
+| 分带混洗 (Band) | 9.00 | 🥈 |
+| 随机 Shuffle (Baseline) | 9.03 | 🥉 |
+
+**课程学习优于随机 0.4%，β退火略优于分带混洗**——验证了阶段4/5的设计，也为更大规模数据的收益提供了趋势证据。
 
 ## 技术栈
 

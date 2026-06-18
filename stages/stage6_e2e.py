@@ -205,12 +205,12 @@ def convert_all_data(cfg: E2EConfig, logger: logging.Logger) -> Dict[str, str]:
     outputs["baseline"] = path_a
     logger.info(f"  A. Baseline (random): {path_a} ({len(baseline_data)} 条)")
 
-    # B: Band-Shuffle — 保持 band 顺序（已经按 band1→2→3 排列）
-    # 注意: band 数据在 stage4 中已按 curriculum_band 分组排序
+    # B: Band-Shuffle — 保持 band 顺序 + 转换格式
+    band_conv = convert_to_sft_format(band_data)
     path_b = os.path.join(cfg.sft_data_dir, "sft_band.jsonl")
-    save_jsonl(band_data, path_b)  # 直接保存，stage4 已排序
+    save_jsonl(band_conv, path_b)
     outputs["band"] = path_b
-    logger.info(f"  B. Band-Shuffle: {path_b} ({len(band_data)} 条)")
+    logger.info(f"  B. Band-Shuffle: {path_b} ({len(band_conv)} 条)")
 
     # C: Beta-Annealing — 按 sampling_weight 降序
     beta_sorted = sorted(beta_data, key=lambda x: x.get("sampling_weight", 0),
