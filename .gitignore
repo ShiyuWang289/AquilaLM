@@ -24,3 +24,4 @@ __pycache__/
 Thumbs.db
 data/e2e_experiments/
 experiments/stage6/
+models/

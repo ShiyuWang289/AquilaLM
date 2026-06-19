@@ -67,7 +67,10 @@ class PipelineConfig:
     ppl_tokenizer: str = "jieba"
     ppl_threshold: float = 200.0
     min_train_samples: int = 1000
+    ppl_train_data: str = "auto"           # "auto" | "wiki" | path
     ppl_output: str = "data/scored.jsonl"
+    # 白名单
+    whitelist: Dict[str, list] = field(default_factory=dict)
     # 去重
     dedup_enabled: bool = True
     jaccard_threshold: float = 0.80
@@ -108,6 +111,8 @@ class PipelineConfig:
             ppl_threshold=ppl.get("ppl_threshold", 200.0),
             min_train_samples=ppl.get("min_train_samples", 1000),
             ppl_output=ppl.get("output", "data/scored.jsonl"),
+            ppl_train_data=ppl.get("train_data", "auto"),
+            whitelist=rules.get("whitelist", {}),
             dedup_enabled=dedup.get("enabled", True),
             jaccard_threshold=dedup.get("jaccard_threshold", 0.80),
             num_perm=dedup.get("num_perm", 128),
@@ -239,6 +244,16 @@ class RuleFilter:
         # 编译正则（一次编译，反复使用）
         self.url_re = re.compile(r'https?://\S+')
         self.html_re = re.compile(r'<[^>]+>')
+        # 1.2 白名单：加载并编译白名单模式
+        self.whitelist = getattr(config, "whitelist", {})
+        self.whitelist_compiled = {}
+        for rule_name, patterns in self.whitelist.items():
+            self.whitelist_compiled[rule_name] = [re.compile(p) for p in patterns]
+
+    def _is_whitelisted(self, text: str, rule_name: str) -> bool:
+        """检查文本是否命中某条规则的白名单"""
+        patterns = self.whitelist_compiled.get(rule_name, [])
+        return any(p.search(text) for p in patterns)
 
     def _extract_text(self, item: Dict) -> str:
         """从 JSON 对象中提取主文本"""
@@ -247,23 +262,27 @@ class RuleFilter:
     # ---- 各规则 ----
 
     def _rule_length(self, text: str) -> Tuple[bool, str]:
-        """长度过滤"""
+        """长度过滤（白名单豁免短法条/短标题）"""
         length = len(text)
         if length < self.config.min_text_length:
+            if self._is_whitelisted(text, "length"):
+                return True, ""  # 白名单：短法条放行
             return False, f"too_short({length}<{self.config.min_text_length})"
         if length > self.config.max_text_length:
             return False, f"too_long({length}>{self.config.max_text_length})"
         return True, ""
+        return True, ""
 
     def _rule_non_chinese(self, text: str) -> Tuple[bool, str]:
-        """非中文字符比例"""
+        """非中文字符比例（白名单豁免技术术语+英文专名混排）"""
         if len(text) == 0:
             return False, "empty_text"
         cn_chars = sum(1 for c in text if '一' <= c <= '鿿')
         non_cn_ratio = 1.0 - cn_chars / len(text)
         if non_cn_ratio > self.config.max_non_chinese_ratio:
+            if self._is_whitelisted(text, "non_chinese"):
+                return True, ""  # 白名单：技术术语+英文专名放行
             return False, f"non_chinese_ratio({non_cn_ratio:.2f}>{self.config.max_non_chinese_ratio})"
-        return True, ""
 
     def _rule_repeat_char(self, text: str) -> Tuple[bool, str]:
         """重复字符比例（防全是同一字）"""
@@ -286,13 +305,15 @@ class RuleFilter:
         return True, ""
 
     def _rule_effective_ratio(self, text: str) -> Tuple[bool, str]:
-        """有效字符比：去空格/标点/换行后 占比"""
+        """有效字符比：去空格/标点/换行后 占比（白名单豁免纯中文短句）"""
         if len(text) == 0:
             return False, "empty_text"
         # 有效字符 = 中文 + 英文 + 数字
         effective = sum(1 for c in text if c.isalnum() or '一' <= c <= '鿿')
         ratio = effective / len(text)
         if ratio < self.config.min_effective_ratio:
+            if self._is_whitelisted(text, "effective_ratio"):
+                return True, ""  # 白名单：纯中文短句放行
             return False, f"low_effective_ratio({ratio:.2f}<{self.config.min_effective_ratio})"
         return True, ""
 
@@ -833,7 +854,33 @@ def main():
 
         ngram_model = NgramModel(n=cfg.ngram_n, tokenizer_type=cfg.ppl_tokenizer)
         ngram_model.logger = logger
-        ngram_model.train(texts)
+
+        # 1.1 训练/评估数据分离：优先加载已有哨兵模型
+        sentinel_path = "models/ngram_sentinel.pt"
+        if os.path.exists(sentinel_path):
+            import torch
+            logger.info(f"  加载已训练的 N-gram 哨兵模型: {sentinel_path}")
+            ngram_model = torch.load(sentinel_path, weights_only=False)
+            ngram_model.logger = logger
+        else:
+            train_source = getattr(cfg, "ppl_train_data", "auto")
+            if train_source == "wiki":
+                from datasets import load_dataset as hf_load_dataset
+                logger.info("  从中文维基百科加载外部训练语料...")
+                wiki = hf_load_dataset("wikipedia", "20220301.zh", split="train",
+                                       streaming=True, trust_remote_code=True)
+                wiki_texts = []
+                for i, row in enumerate(wiki):
+                    wiki_texts.append(row["text"])
+                    if i >= 200:
+                        break
+                ngram_model.train(wiki_texts)
+                logger.info(f"  N-gram 哨兵模型已用 {len(wiki_texts)} 条维基语料训练")
+            else:
+                ngram_model.train(texts)
+                logger.warning("  未找到哨兵模型(models/ngram_sentinel.pt)，"
+                               "用待评估数据自训练，PPL 可能偏低。"
+                               "建议先用 cleaned.jsonl 训练哨兵模型。")
 
         current, ppl_stats = filter_by_ppl(current, ngram_model, cfg.ppl_threshold, logger)
         # 保存全部评分结果（含未通过的，方便后续分析）

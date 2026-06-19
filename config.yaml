@@ -20,6 +20,16 @@ rule_filter:
   max_repeat_char_ratio: 0.40            # 单字最大重复占比（防"哈哈哈哈哈..."）
   max_url_count: 20                      # URL 最大出现次数（网页语料天然含链接）
   min_effective_ratio: 0.50              # 最小有效字符比（去空格/标点后）
+  # 白名单：命中这些模式时，跳过对应规则（不误杀短法条/技术术语等）
+  whitelist:
+    length:                               # 跳过最短长度检查的模式
+      - "^第[一二三四五六七八九十百千]+[条章节]"    # 法律条文
+      - "^[《「].+[》」]$"                        # 书名号短标题
+    non_chinese:                          # 跳过非中文检查的模式
+      - "\\b(API|CPU|GPU|HTTP|JSON|SQL|CSS|HTML|LLM|NLP|AI|ML|DL)\\b"
+      - "^[A-Z][a-z]+[\\s，、].*[一-鿿]"         # 英文专名+中文
+    effective_ratio:                      # 跳过有效字符比检查的模式
+      - "^[一-鿿，、。；：！？]{3,}$"            # 纯中文短句
   output: "data/passed_rules.jsonl"      # 规则过滤后输出
 
 # ============================================================
@@ -31,6 +41,7 @@ ngram_ppl:
   tokenizer: "jieba"                     # 分词方式：jieba | char（按字）
   ppl_threshold: 30                     # PPL 超过此值的丢弃（网页语料最终推荐值）
   min_train_samples: 1000                # N-gram 模型最少训练样本数
+  train_data: "auto"                     # auto = 自动使用待评数据 | "wiki" = 中文维基 | path/to/corpus.txt
   output: "data/scored.jsonl"            # PPL 打分后输出（保留全部，带 ppl 字段）
 
 # ============================================================
@@ -91,6 +102,7 @@ quality_eval:
   # PPL 流畅度
   ppl_n: 3                                    # N-gram 阶数
   ppl_tokenizer: "jieba"                      # 分词方式
+  ppl_train_data: "auto"                      # auto = 待评数据 | "wiki" = 中文维基哨兵
   # IFD 指令难度
   ifd_model_name: "uer/gpt2-chinese-cluecorpussmall"  # 中文 GPT-2（CPU可跑）
   ifd_batch_size: 4                           # 推理 batch size
