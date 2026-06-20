@@ -25,3 +25,4 @@ Thumbs.db
 data/e2e_experiments/
 experiments/stage6/
 models/
+data/.si_checkpoint_800.json

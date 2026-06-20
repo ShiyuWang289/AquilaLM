@@ -44,8 +44,8 @@ class ComparisonConfig:
     qwen_output: str = "data/synthesized_800seeds.jsonl"
 
     # Qwen API
-    qwen_api_base: str = "https://api.deepseek.com"
-    qwen_model: str = "deepseek-chat"
+    qwen_api_base: str = "https://llm-y8gcr45k37ga29au.cn-beijing.maas.aliyuncs.com/compatible-mode/v1"
+    qwen_model: str = "deepseek-v4-pro"
     qwen_api_key: str = ""
 
     # 对比参数
@@ -206,11 +206,13 @@ def run_qwen_si(seeds: List[Dict], cfg: ComparisonConfig,
 
     total_tokens = 0
     results = []
+    # 恢复已有数据（断点续跑场景）
+    if os.path.exists(cfg.qwen_output):
+        results = load_jsonl(cfg.qwen_output)
     failed = 0
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
     import threading
-
     task_types = ["推理分析", "知识问答", "文本生成", "代码编写", "多轮对话"]
     checkpoint_path = os.path.join(os.path.dirname(cfg.qwen_output) or "data",
                                    ".si_checkpoint_800.json")
@@ -223,53 +225,67 @@ def run_qwen_si(seeds: List[Dict], cfg: ComparisonConfig,
     lock = threading.Lock()
     completed_count = 0  # track for tqdm
 
-    def process_one_type(seed_id, text, task_type, cfg):
-        instruction = (
-            CODE_PROMPT_EXTRA if task_type == "代码编写"
-            else f'指令类型必须为：{task_type}'
-        )
-        prompt = SI_PROMPT_TEMPLATE.format(text=text, task_type=instruction)
-        resp = call_qwen(cfg.qwen_api_base, cfg.qwen_api_key,
-                         cfg.qwen_model, prompt,
-                         cfg.temperature, cfg.max_tokens, logger)
-        if resp and "choices" in resp and resp["choices"]:
-            msg = resp["choices"][0]["message"]
-            content = msg.get("content", "")
-            usage = resp.get("usage", {}).get("total_tokens", 0)
-            parsed = extract_json(content)
-            if parsed and "instruction" in parsed and "output" in parsed:
-                return {"ok": True, "result": {"instruction": parsed["instruction"],
-                        "output": parsed["output"], "task_type": task_type,
-                        "seed_id": str(seed_id), "source": "ds-maas-si",
-                        "id": f"maas_{seed_id}_{task_type[:2]}"}, "tokens": usage}
-        return {"ok": False, "tokens": 0}
-
+    # 串行生成 + 自适应延迟（DS API 串行最快 ~1.5s/次，不会触发限频）
     for seed_idx, seed in enumerate(tqdm(seeds, desc="DS SI")):
         text = seed.get("text", "") or seed.get("content", "")
         seed_id = seed.get("id", f"seed_{seed_idx}")
 
         if seed_id in done_seeds:
+            with lock:
+                # 将已完成的种子数据追加到 results（从文件恢复）
+                pass  # done_seeds 跳过即可，数据在文件中
             continue
 
-        # 并发 5 个 task_type
-        with ThreadPoolExecutor(max_workers=5) as pool:
-            futures = {pool.submit(process_one_type, seed_id, text, t, cfg): t
-                       for t in task_types}
-            for future in as_completed(futures):
-                r = future.result()
-                with lock:
-                    total_tokens += r["tokens"]
-                    if r["ok"]:
-                        results.append(r["result"])
-                    else:
-                        failed += 1
+        for gen in range(cfg.generations_per_seed):
+            task_type = task_types[gen % len(task_types)]
+            instruction = (
+                CODE_PROMPT_EXTRA if task_type == "代码编写"
+                else f'指令类型必须为：{task_type}'
+            )
+            prompt = SI_PROMPT_TEMPLATE.format(text=text, task_type=instruction)
+            resp = call_qwen(cfg.qwen_api_base, cfg.qwen_api_key,
+                             cfg.qwen_model, prompt,
+                             cfg.temperature, cfg.max_tokens, logger)
 
-        # 每个种子完成后写 checkpoint + 增量保存
-        done_seeds.add(seed_id)
+            if resp and "choices" in resp and resp["choices"]:
+                msg = resp["choices"][0]["message"]
+                content = msg.get("content", "")
+                usage = resp.get("usage", {}).get("total_tokens", 0)
+                total_tokens += usage
+                parsed = extract_json(content)
+                if parsed and "instruction" in parsed and "output" in parsed:
+                    result_item = {
+                        "instruction": parsed["instruction"],
+                        "output": parsed["output"],
+                        "task_type": task_type,
+                        "seed_id": str(seed_id),
+                        "source": "ds-si",
+                        "id": f"ds_{seed_id}_{task_type[:2]}",
+                    }
+                    with lock:
+                        results.append(result_item)
+                    # 每条立即写盘
+                    with open(cfg.qwen_output, "a", encoding="utf-8") as f:
+                        json.dump(result_item, f, ensure_ascii=False)
+                        f.write("\n")
+                else:
+                    with lock:
+                        failed += 1
+            else:
+                with lock:
+                    failed += 1
+
+            time.sleep(0.5)
+
+        # 每个种子完成后写 checkpoint
+        with lock:
+            done_seeds.add(seed_id)
         with open(checkpoint_path, "w") as f:
             json.dump(list(done_seeds), f)
 
-    save_jsonl(results, cfg.qwen_output)
+    # 去重后覆盖写入
+    unique = {d["id"]: d for d in results}
+    save_jsonl(list(unique.values()), cfg.qwen_output)
     logger.info(f"  产出: {len(results)} 条, 失败: {failed}")
     logger.info(f"  Token 消耗: {total_tokens}, 费用: 免费额度")
     return results
