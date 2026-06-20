@@ -59,7 +59,6 @@ AquilaLM/
 │   ├── roadmap.md                  # 项目仪表盘（进度/边界/改进计划）
 │   ├── architecture.md             # 架构全景
 │   ├── stage1_cleaning.md          # 阶段1原理+实验报告
-│   └── stage2_instruction_synth.md # 阶段2原理+面试速记卡
 ├── experiments/                # 实验记录
 │   ├── stage1_grid_search.md       # 2×2网格搜索
 │   └── stage2_synth_report.md      # 指令合成POC报告

@@ -10,7 +10,6 @@ from .io import extract_texts
 def profile_data(data: List[Dict], logger: logging.Logger) -> None:
     """
     清洗前对种子数据做分布探查。
-    面试要点：阈值不能拍脑袋，必须先看数据分布再定。
     """
     if not data:
         logger.warning("数据为空，跳过探查")

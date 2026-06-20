@@ -156,7 +156,6 @@ def setup_logging(log_dir: str, level: str = "INFO") -> logging.Logger:
 def profile_data(data: List[Dict], logger: logging.Logger) -> None:
     """
     清洗前对种子数据做分布探查。
-    面试要点：阈值不能拍脑袋，必须先看数据分布再定。
     """
     if not data:
         logger.warning("数据为空，跳过探查")
@@ -363,7 +362,6 @@ class RuleFilter:
 class NgramModel:
     """
     手写 N-gram 回退语言模型（替代 KenLM）。
-    面试考点：回退机制 + Kneser-Ney 思想 + PPL 公式推导。
     """
 
     def __init__(self, n: int = 3, tokenizer_type: str = "jieba"):
@@ -532,7 +530,6 @@ def _extract_texts(data: List[Dict]) -> List[str]:
 def profile_health(data: List[Dict], label: str, logger: logging.Logger) -> Dict:
     """
     计算数据集的健康度指标。
-    面试要点：清洗不能只看数量变化，必须用分布指标量化效果。
     """
     texts = _extract_texts(data)
     if not texts:
@@ -707,7 +704,6 @@ def _quality_score(item: Dict) -> float:
 class Deduplicator:
     """
     MinHash + LSH 近似去重器。
-    封装 datasketch，面试时需能解释底层 Jaccard/MinHash/LSH 原理。
     """
 
     def __init__(self, config: PipelineConfig, logger: logging.Logger):

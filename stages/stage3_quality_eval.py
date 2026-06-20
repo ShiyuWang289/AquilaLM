@@ -14,7 +14,6 @@ PPL 流畅度 + IFD 指令难度 + Embedding 多样性
 输入：data/synthesized.jsonl (505条)
 输出：data/scored.jsonl (505条 + ppl/ifd_score/diversity_score)
 
-面试目标：被问"你的数据质量评估是怎么做的"时，能讲清三维指标的
 计算原理、协同机制、以及为什么这三者能覆盖质量的主要方面。
 """
 
@@ -192,7 +191,6 @@ class IFDScorer:
     - IFD ≈ 1：指令对答案预测帮助很小 → 困难指令
     - IFD > 1：指令反而干扰了答案预测（罕见，通常说明指令和答案不一致）
 
-    面试考点：
     - 为什么用 GPT-2 而不用更强的模型？
       答：IFD 只需要相对排序，GPT-2 已能反映"指令对答案的引导力"。
       更大的模型反而增加推理成本，且排序结果高度相关。
@@ -226,7 +224,6 @@ class IFDScorer:
         self.model.to(self.device)
         self.model.eval()
 
-        # 统计参数量（面试用）
         params_m = sum(p.numel() for p in self.model.parameters()) / 1e6
         logger.info(f"  [IFD] 模型加载完成: {params_m:.0f}M 参数")
 

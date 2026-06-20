@@ -18,7 +18,6 @@ AquilaLM 阶段6：端到端集成验证
     python stage6_e2e.py --eval-all              # 评估所有 checkpoint
     python stage6_e2e.py --report                # 输出对比报告
 
-面试目标: 被问"你的数据飞轮有端到端验证吗"时，能讲清三组对照
 实验设计、控制变量方法、以及如何从 eval loss 中读出数据增益。
 """
 
@@ -452,7 +451,6 @@ def generate_report(results: List[Dict], logger: logging.Logger) -> str:
             logger.info(f"- 但这不否定数据飞轮的设计——"
                         f"换更大模型和 10x 数据即可看到差异")
 
-    logger.info(f"\n## 面试话术")
     logger.info(
         f'> "阶段6 在 MiniMind2 104M 模型上用三组对照实验验证了数据飞轮。'
         f'baseline(随机) vs band(分带混洗) vs beta(β退火)，'

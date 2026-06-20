@@ -16,7 +16,6 @@ AquilaLM 反馈闭环调度器
     python stage5_flywheel.py --mock-scenario hard  # 模拟"模型只擅长简单任务"
     python stage5_flywheel.py --dry-run             # 只输出建议，不改config
 
-面试目标: 被问"你的反馈闭环是怎么设计的"时, 能讲清信号→权重→
 调整的完整决策链路, 以及哪些信号驱动哪些参数, 为什么。
 """
 

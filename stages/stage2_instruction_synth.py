@@ -157,7 +157,6 @@ def setup_logging(log_dir: str, level: str = "INFO") -> logging.Logger:
 class LLMClient:
     """
     统一的 API 调用封装。支持 DeepSeek OpenAI 兼容格式，内置重试和 token 统计。
-    面试要点：封装层解耦了业务逻辑和 API 细节，换模型只需改配置。
     """
 
     def __init__(self, config: SynthConfig, logger: logging.Logger):
@@ -669,7 +668,6 @@ class DPOPairBuilder:
 class PostFilter:
     """
     合成后质量过滤。
-    面试要点：规则层兜底 + Embedding 一致性打分 = 零人工质量的自动保障。
     """
 
     def __init__(self, config: SynthConfig, logger: logging.Logger):

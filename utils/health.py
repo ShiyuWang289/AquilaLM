@@ -10,7 +10,6 @@ from .io import extract_texts
 def profile_health(data: List[Dict], label: str, logger: logging.Logger) -> Dict:
     """
     计算数据集的健康度指标。
-    面试要点：清洗不能只看数量变化，必须用分布指标量化效果。
     """
     texts = extract_texts(data)
     if not texts:
