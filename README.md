@@ -183,11 +183,45 @@ python stages/stage2_instruction_synth.py
 
 **思路**：PPL 阈值不应随数据集而变化。`utils/ppl_benchmark.py` 构建了标准评测集（高/中/低质量文本），实现阈值自动校准：`threshold = P95(高质量) × 1.5`。
 
-这些改进的完整设计思路和技术细节见 `docs/layer1_foundation_fixes.md`。
+### 数据增量与 SPIN 自博弈
+
+**数据放大**：用 800 种子 + 预分配 task_type 策略，将指令数据从 505 条放大到 **1921 条（3.8x）**，混合 DeepSeek v4-flash + v4-pro 两个模型版本。
+
+**下游验证**：1921 条重新走完阶段3评估（IFD 0.658, Diversity 0.730）→ 阶段4排序 → 阶段6三组训练。β退火以 8.91 最优，课程学习效果方向一致。
+
+**SPIN 自博弈**：用阶段6最优 SFT checkpoint，对 500 条指令做一轮自博弈训练（不增加任何外部数据），eval loss 降低 2.35%。50 条 POC（+0.49%）→ 500 条全量（+2.35%），验证了"更多样本 → 更丰富的对手生成 → 更强的对抗训练信号"的核心假设。
+
+## 全链路数据流
+
+```
+C4 网页 3679条
+  │
+  ▼ [阶段1] 规则+PPL(哨兵)+LSH
+cleaned.jsonl 3082条
+  │
+  ▼ [阶段2] Self-Instruct + Evol-Instruct (DS v4flash+v4pro, 800种子)
+synthesized_v2.jsonl 1921条 (去重后)
+  │
+  ▼ [阶段3] PPL(哨兵 5.4) + IFD(0.658) + Diversity(0.730)
+scored_v2.jsonl 1921条
+  │
+  ▼ [阶段4] Band-Shuffle / β退火 (745条/组)
+curriculum_v2.jsonl
+  │
+  ▼ [阶段6] 三组 SFT 训练 (104M MiniMind, RTX 4060)
+  │   Baseline 8.92 | Band 8.92 | Beta 8.91
+  │
+  ▼ [阶段7 SPIN] β退火模型自博弈 (500条, 1 epoch)
+  │   Before 9.09 → After 8.88 (+2.35%)
+  │
+  ▼ [阶段5 闭环] 8信号×13参数 → 反向驱动上游策略
+
+反馈信号 ←──────────────────────────────────────────┘
+```
 
 ## 技术栈
 
-`PyTorch` `Transformers` `Jieba` `DataSketch` `Sentence-Transformers` `YaRN` `GQA` `FlashAttention` `DPO` `PPO`
+`PyTorch` `Transformers` `Jieba` `DataSketch` `Sentence-Transformers` `MiniMind` `SPIN` `DeepSeek API`
 
 ## 关联项目
 
